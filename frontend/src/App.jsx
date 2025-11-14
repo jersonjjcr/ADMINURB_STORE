@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AppProvider } from './context/AppContext';
 import { AuthProvider } from './context/AuthContext';
-import Layout from './components/Layout';
+import LayoutModern from './components/LayoutModern';
 import PrivateRoute from './components/PrivateRoute';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
@@ -22,7 +22,7 @@ function App() {
               path="/"
               element={
                 <PrivateRoute>
-                  <Layout />
+                  <LayoutModern />
                 </PrivateRoute>
               }
             >
