@@ -71,29 +71,30 @@ export const getDashboardMetrics = async (req, res) => {
       }
     ]);
     
-    res.json({
-      success: true,
-      data: {
-        today: {
-          salesCount: todaySales[0]?.count || 0,
-          salesTotal: todaySales[0]?.total || 0
-        },
-        month: {
-          salesCount: monthSales[0]?.count || 0,
-          salesTotal: monthSales[0]?.total || 0
-        },
-        inventory: {
-          totalProducts,
-          lowStockProducts: lowStockProducts.length,
-          lowStockItems: lowStockProducts
-        },
-        customers: {
-          total: totalCustomers,
-          withDebt: customersWithDebt.length,
-          totalDebt: totalDebt[0]?.total || 0,
-          debtList: customersWithDebt
+    // Obtener ventas recientes
+    const recentSales = await Sale.find()
+      .populate('customer', 'name whatsappNumber')
+      .sort({ date: -1 })
+      .limit(10);
+
+    // Calcular total de todas las ventas
+    const allSales = await Sale.aggregate([
+      {
+        $group: {
+          _id: null,
+          total: { $sum: '$total' }
         }
       }
+    ]);
+
+    res.json({
+      totalSales: allSales[0]?.total || 0,
+      totalProducts: totalProducts,
+      lowStockProducts: lowStockProducts.length,
+      totalDebt: totalDebt[0]?.total || 0,
+      customersWithDebt: customersWithDebt,
+      recentSales: recentSales,
+      lowStockItems: lowStockProducts
     });
   } catch (error) {
     res.status(500).json({
