@@ -28,9 +28,7 @@ const CreditsPage = () => {
   const fetchCustomers = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/customers', {
-        params: { hasDebt: true }
-      });
+      const response = await api.get('/customers');
       setCustomers(response.data.data);
     } catch (error) {
       showNotification('Error cargando clientes', 'error');
@@ -157,10 +155,16 @@ const CreditsPage = () => {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="bg-white rounded-lg shadow-md p-6">
           <p className="text-sm text-gray-600 uppercase">Total Clientes</p>
           <p className="text-3xl font-bold text-gray-900 mt-2">{customers.length}</p>
+        </div>
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <p className="text-sm text-gray-600 uppercase">Con Deuda</p>
+          <p className="text-3xl font-bold text-orange-600 mt-2">
+            {customers.filter(c => c.balance > 0).length}
+          </p>
         </div>
         <div className="bg-white rounded-lg shadow-md p-6">
           <p className="text-sm text-gray-600 uppercase">Deuda Total</p>
@@ -169,9 +173,10 @@ const CreditsPage = () => {
           </p>
         </div>
         <div className="bg-white rounded-lg shadow-md p-6">
-          <p className="text-sm text-gray-600 uppercase">Sin Recordatorio Reciente</p>
+          <p className="text-sm text-gray-600 uppercase">Sin Recordatorio</p>
           <p className="text-3xl font-bold text-yellow-600 mt-2">
             {customers.filter((c) => {
+              if (c.balance === 0) return false; // No contar clientes sin deuda
               if (!c.lastReminder) return true;
               const sevenDaysAgo = new Date();
               sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
