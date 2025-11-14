@@ -141,6 +141,38 @@ const CustomerDetailPage = () => {
         </div>
       </div>
 
+      {/* Próximo Pago Programado */}
+      {customer.nextPaymentDate && customer.balance > 0 && (
+        <div className={`rounded-lg shadow-md p-6 ${
+          new Date(customer.nextPaymentDate) < new Date() 
+            ? 'bg-red-50 border-2 border-red-500' 
+            : 'bg-blue-50 border-2 border-blue-500'
+        }`}>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium uppercase mb-1">
+                {new Date(customer.nextPaymentDate) < new Date() 
+                  ? '⚠️ Pago Vencido' 
+                  : '📅 Próximo Pago Programado'}
+              </p>
+              <p className="text-2xl font-bold">
+                {new Date(customer.nextPaymentDate).toLocaleDateString('es-CO', {
+                  weekday: 'long',
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+                })}
+              </p>
+              <p className="text-sm mt-1">
+                {customer.paymentReminderSent 
+                  ? '✅ Recordatorio enviado por WhatsApp' 
+                  : '⏳ Recordatorio pendiente de envío'}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Notas */}
       {customer.notes && (
         <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">

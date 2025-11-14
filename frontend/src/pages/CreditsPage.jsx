@@ -17,7 +17,8 @@ const CreditsPage = () => {
   const { values, handleChange, reset } = useForm({
     name: '',
     whatsappNumber: '+57',
-    notes: ''
+    notes: '',
+    nextPaymentDate: ''
   });
 
   useEffect(() => {
@@ -57,7 +58,8 @@ const CreditsPage = () => {
       reset({
         name: '',
         whatsappNumber: '+57',
-        notes: ''
+        notes: '',
+        nextPaymentDate: ''
       });
       fetchCustomers();
       triggerRefresh();
@@ -98,6 +100,27 @@ const CreditsPage = () => {
           {formatDate(row.lastReminder)}
         </span>
       )
+    },
+    {
+      header: 'Próximo Pago',
+      render: (row) => {
+        if (!row.nextPaymentDate) return <span className="text-gray-400">Sin programar</span>;
+        
+        const paymentDate = new Date(row.nextPaymentDate);
+        const today = new Date();
+        const isOverdue = paymentDate < today && row.balance > 0;
+        
+        return (
+          <span className={isOverdue ? 'text-red-600 font-semibold' : 'text-blue-600'}>
+            {paymentDate.toLocaleDateString('es-CO', {
+              day: '2-digit',
+              month: '2-digit',
+              year: 'numeric'
+            })}
+            {isOverdue && ' ⚠️'}
+          </span>
+        );
+      }
     },
     {
       header: 'Créditos',
@@ -195,6 +218,20 @@ const CreditsPage = () => {
             />
             <p className="text-xs text-gray-500 mt-1">
               📱 Formato Colombia: +57 seguido del número (ej: +57 300 123 4567)
+            </p>
+          </div>
+
+          <div>
+            <label className="label">Fecha de Pago Programada (opcional)</label>
+            <input
+              type="datetime-local"
+              name="nextPaymentDate"
+              value={values.nextPaymentDate}
+              onChange={handleChange}
+              className="input"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              📅 Si programas una fecha, el sistema enviará recordatorio automático por WhatsApp
             </p>
           </div>
 

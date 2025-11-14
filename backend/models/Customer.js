@@ -44,6 +44,14 @@ const customerSchema = new mongoose.Schema({
     type: Date,
     default: null
   },
+  nextPaymentDate: {
+    type: Date,
+    default: null
+  },
+  paymentReminderSent: {
+    type: Boolean,
+    default: false
+  },
   notes: {
     type: String,
     trim: true

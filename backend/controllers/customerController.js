@@ -194,6 +194,12 @@ export const registerPayment = async (req, res) => {
       date: new Date()
     });
     
+    // Si el cliente saldó su deuda completamente, resetear campos de recordatorio
+    if (customer.balance === 0) {
+      customer.nextPaymentDate = null;
+      customer.paymentReminderSent = false;
+    }
+    
     await customer.save({ session });
     await session.commitTransaction();
     
