@@ -16,7 +16,7 @@ const CreditsPage = () => {
 
   const { values, handleChange, reset } = useForm({
     name: '',
-    whatsappNumber: '',
+    whatsappNumber: '+57',
     notes: ''
   });
 
@@ -41,10 +41,10 @@ const CreditsPage = () => {
   const handleCreateCustomer = async (e) => {
     e.preventDefault();
     try {
-      // Asegurar formato correcto del número
+      // Asegurar formato correcto del número (Colombia +57)
       let phone = values.whatsappNumber;
       if (!phone.startsWith('+')) {
-        phone = '+52' + phone.replace(/\D/g, '');
+        phone = '+57' + phone.replace(/\D/g, '');
       }
 
       await api.post('/customers', {
@@ -54,7 +54,11 @@ const CreditsPage = () => {
 
       showNotification('Cliente creado exitosamente');
       setShowModal(false);
-      reset();
+      reset({
+        name: '',
+        whatsappNumber: '+57',
+        notes: ''
+      });
       fetchCustomers();
       triggerRefresh();
     } catch (error) {
@@ -181,16 +185,16 @@ const CreditsPage = () => {
           <div>
             <label className="label">Número de WhatsApp</label>
             <input
-              type="text"
+              type="tel"
               name="whatsappNumber"
               value={values.whatsappNumber}
               onChange={handleChange}
               className="input"
-              placeholder="+52 555 123 4567"
+              placeholder="+57 300 123 4567"
               required
             />
             <p className="text-xs text-gray-500 mt-1">
-              Incluye el código de país (ej: +52 para México)
+              📱 Formato Colombia: +57 seguido del número (ej: +57 300 123 4567)
             </p>
           </div>
 
