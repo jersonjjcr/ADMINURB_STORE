@@ -5,11 +5,15 @@ import dotenv from 'dotenv';
 import { startCronJobs } from './cron/notificationCron.js';
 
 // Rutas
+import authRoutes from './routes/authRoutes.js';
 import productRoutes from './routes/productRoutes.js';
 import saleRoutes from './routes/saleRoutes.js';
 import customerRoutes from './routes/customerRoutes.js';
 import dashboardRoutes from './routes/dashboardRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
+
+// Middleware
+import { authenticate } from './middleware/auth.js';
 
 dotenv.config();
 
@@ -33,12 +37,15 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Rutas principales
-app.use('/api/products', productRoutes);
-app.use('/api/sales', saleRoutes);
-app.use('/api/customers', customerRoutes);
-app.use('/api/dashboard', dashboardRoutes);
-app.use('/api/notifications', notificationRoutes);
+// Rutas públicas (no requieren autenticación)
+app.use('/api/auth', authRoutes);
+
+// Rutas protegidas (requieren autenticación)
+app.use('/api/products', authenticate, productRoutes);
+app.use('/api/sales', authenticate, saleRoutes);
+app.use('/api/customers', authenticate, customerRoutes);
+app.use('/api/dashboard', authenticate, dashboardRoutes);
+app.use('/api/notifications', authenticate, notificationRoutes);
 
 // Manejo de errores global
 app.use((err, req, res, next) => {

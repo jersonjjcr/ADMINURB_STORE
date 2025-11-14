@@ -1,12 +1,21 @@
-import { Outlet, NavLink } from 'react-router-dom';
+import { Outlet, NavLink, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const Layout = () => {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
   const navLinks = [
     { to: '/dashboard', label: 'Dashboard', icon: '📊' },
     { to: '/inventory', label: 'Inventario', icon: '📦' },
     { to: '/sales', label: 'Ventas', icon: '💰' },
     { to: '/credits', label: 'Créditos', icon: '💳' }
   ];
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -18,7 +27,7 @@ const Layout = () => {
               <h1 className="text-2xl font-bold text-primary-600">Urban Store</h1>
             </div>
             
-            <div className="flex space-x-4">
+            <div className="flex items-center space-x-4">
               {navLinks.map((link) => (
                 <NavLink
                   key={link.to}
@@ -35,6 +44,16 @@ const Layout = () => {
                   {link.label}
                 </NavLink>
               ))}
+              
+              <div className="flex items-center space-x-3 ml-4 pl-4 border-l border-gray-300">
+                <span className="text-sm text-gray-600">{user?.name}</span>
+                <button
+                  onClick={handleLogout}
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
+                >
+                  🚪 Salir
+                </button>
+              </div>
             </div>
           </div>
         </div>
