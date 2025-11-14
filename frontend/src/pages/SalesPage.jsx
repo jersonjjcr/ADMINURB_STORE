@@ -183,6 +183,8 @@ const SalesPage = () => {
                         ? 'bg-green-100 text-green-800'
                         : sale.paymentMethod === 'tarjeta'
                         ? 'bg-blue-100 text-blue-800'
+                        : sale.paymentMethod === 'transferencia'
+                        ? 'bg-purple-100 text-purple-800'
                         : 'bg-yellow-100 text-yellow-800'
                     }`}
                   >
@@ -328,6 +330,7 @@ const SalesPage = () => {
             >
               <option value="efectivo">Efectivo</option>
               <option value="tarjeta">Tarjeta</option>
+              <option value="transferencia">Transferencia</option>
               <option value="credito">Crédito</option>
             </select>
           </div>

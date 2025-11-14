@@ -29,7 +29,7 @@ const saleSchema = new mongoose.Schema({
   paymentMethod: {
     type: String,
     required: true,
-    enum: ['efectivo', 'tarjeta', 'credito'],
+    enum: ['efectivo', 'tarjeta', 'transferencia', 'credito'],
     default: 'efectivo'
   },
   total: {
