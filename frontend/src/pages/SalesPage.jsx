@@ -16,7 +16,14 @@ const SalesPage = () => {
     items: [],
     paymentMethod: 'efectivo',
     isCredit: false,
-    customer: ''
+    customer: '',
+    newCustomer: {
+      name: '',
+      whatsappNumber: '+57',
+      notes: '',
+      nextPaymentDate: ''
+    },
+    createNewCustomer: false
   });
 
   const [currentItem, setCurrentItem] = useState({
@@ -99,15 +106,38 @@ const SalesPage = () => {
       return;
     }
 
-    if (saleForm.isCredit && !saleForm.customer) {
-      showNotification('Selecciona un cliente para venta a crédito', 'error');
+    if (saleForm.isCredit && !saleForm.createNewCustomer && !saleForm.customer) {
+      showNotification('Selecciona un cliente o crea uno nuevo', 'error');
       return;
     }
 
+    if (saleForm.isCredit && saleForm.createNewCustomer) {
+      if (!saleForm.newCustomer.name || !saleForm.newCustomer.whatsappNumber) {
+        showNotification('Completa los datos del nuevo cliente', 'error');
+        return;
+      }
+    }
+
     try {
+      let customerId = saleForm.customer;
+
+      // Crear nuevo cliente si es necesario
+      if (saleForm.isCredit && saleForm.createNewCustomer) {
+        const customerResponse = await api.post('/customers', {
+          name: saleForm.newCustomer.name,
+          whatsappNumber: saleForm.newCustomer.whatsappNumber,
+          notes: saleForm.newCustomer.notes,
+          nextPaymentDate: saleForm.newCustomer.nextPaymentDate || null
+        });
+        customerId = customerResponse.data.data._id;
+      }
+
       const total = calculateTotal();
       await api.post('/sales', {
-        ...saleForm,
+        items: saleForm.items,
+        paymentMethod: saleForm.paymentMethod,
+        isCredit: saleForm.isCredit,
+        customer: customerId,
         total
       });
 
@@ -117,7 +147,14 @@ const SalesPage = () => {
         items: [],
         paymentMethod: 'efectivo',
         isCredit: false,
-        customer: ''
+        customer: '',
+        newCustomer: {
+          name: '',
+          whatsappNumber: '+57',
+          notes: '',
+          nextPaymentDate: ''
+        },
+        createNewCustomer: false
       });
       fetchData();
       triggerRefresh();
@@ -384,21 +421,120 @@ const SalesPage = () => {
 
           {/* Cliente (si es crédito) */}
           {saleForm.isCredit && (
-            <div>
-              <label className="label">Cliente</label>
-              <select
-                value={saleForm.customer}
-                onChange={(e) => setSaleForm({ ...saleForm, customer: e.target.value })}
-                className="input"
-                required
-              >
-                <option value="">Seleccionar cliente...</option>
-                {customers.map((c) => (
-                  <option key={c._id} value={c._id}>
-                    {c.name} - {c.whatsappNumber}
-                  </option>
-                ))}
-              </select>
+            <div className="border-2 border-blue-200 rounded-lg p-4 bg-blue-50 space-y-4">
+              <h3 className="font-semibold text-blue-900">Información del Cliente</h3>
+              
+              {/* Toggle entre cliente existente o nuevo */}
+              <div className="flex items-center space-x-4">
+                <label className="flex items-center space-x-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="customerType"
+                    checked={!saleForm.createNewCustomer}
+                    onChange={() => setSaleForm({ ...saleForm, createNewCustomer: false })}
+                    className="form-radio text-blue-600"
+                  />
+                  <span className="text-sm font-medium">Cliente Existente</span>
+                </label>
+                <label className="flex items-center space-x-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="customerType"
+                    checked={saleForm.createNewCustomer}
+                    onChange={() => setSaleForm({ ...saleForm, createNewCustomer: true })}
+                    className="form-radio text-blue-600"
+                  />
+                  <span className="text-sm font-medium">Nuevo Cliente</span>
+                </label>
+              </div>
+
+              {/* Selector de cliente existente */}
+              {!saleForm.createNewCustomer && (
+                <div>
+                  <label className="label">Seleccionar Cliente</label>
+                  <select
+                    value={saleForm.customer}
+                    onChange={(e) => setSaleForm({ ...saleForm, customer: e.target.value })}
+                    className="input"
+                    required
+                  >
+                    <option value="">Seleccionar cliente...</option>
+                    {customers.map((c) => (
+                      <option key={c._id} value={c._id}>
+                        {c.name} - {c.whatsappNumber} {c.balance > 0 ? `(Deuda: $${c.balance.toFixed(2)})` : ''}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* Formulario nuevo cliente */}
+              {saleForm.createNewCustomer && (
+                <div className="space-y-3">
+                  <div>
+                    <label className="label">Nombre Completo *</label>
+                    <input
+                      type="text"
+                      value={saleForm.newCustomer.name}
+                      onChange={(e) => setSaleForm({
+                        ...saleForm,
+                        newCustomer: { ...saleForm.newCustomer, name: e.target.value }
+                      })}
+                      className="input"
+                      placeholder="Ej: Juan Pérez"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="label">Número de WhatsApp *</label>
+                    <input
+                      type="tel"
+                      value={saleForm.newCustomer.whatsappNumber}
+                      onChange={(e) => setSaleForm({
+                        ...saleForm,
+                        newCustomer: { ...saleForm.newCustomer, whatsappNumber: e.target.value }
+                      })}
+                      className="input"
+                      placeholder="+57 300 123 4567"
+                      required
+                    />
+                    <p className="text-xs text-gray-600 mt-1">
+                      📱 Formato: +57 seguido del número
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="label">Fecha de Pago Programada (opcional)</label>
+                    <input
+                      type="datetime-local"
+                      value={saleForm.newCustomer.nextPaymentDate}
+                      onChange={(e) => setSaleForm({
+                        ...saleForm,
+                        newCustomer: { ...saleForm.newCustomer, nextPaymentDate: e.target.value }
+                      })}
+                      className="input"
+                    />
+                    <p className="text-xs text-gray-600 mt-1">
+                      📅 Se enviará recordatorio automático por WhatsApp
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="label">Notas (opcional)</label>
+                    <textarea
+                      value={saleForm.newCustomer.notes}
+                      onChange={(e) => setSaleForm({
+                        ...saleForm,
+                        newCustomer: { ...saleForm.newCustomer, notes: e.target.value }
+                      })}
+                      className="input"
+                      rows="2"
+                      placeholder="Información adicional del cliente..."
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
