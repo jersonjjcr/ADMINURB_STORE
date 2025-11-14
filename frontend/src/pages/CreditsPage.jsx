@@ -2,62 +2,28 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import Table from '../components/Table';
-import Modal from '../components/Modal';
 import Loader from '../components/Loader';
 import { useApp } from '../context/AppContext';
-import { useForm } from '../hooks/useCustomHooks';
 
 const CreditsPage = () => {
-  const [sales, setSales] = useState([]);
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
-  const { showNotification, triggerRefresh } = useApp();
+  const { showNotification } = useApp();
 
   useEffect(() => {
-    fetchCreditSales();
+    fetchCustomers();
   }, []);
 
-  const fetchCreditSales = async () => {
+  const fetchCustomers = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/sales');
-      // Filtrar solo ventas a crédito
-      const creditSales = response.data.data.filter(sale => sale.paymentMethod === 'credit');
-      setSales(creditSales);
+      const response = await api.get('/customers');
+      setCustomers(response.data.data);
     } catch (error) {
-      showNotification('Error cargando ventas a crédito', 'error');
+      showNotification('Error cargando clientes', 'error');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleCreateCustomer = async (e) => {
-    e.preventDefault();
-    try {
-      // Asegurar formato correcto del número (Colombia +57)
-      let phone = values.whatsappNumber;
-      if (!phone.startsWith('+')) {
-        phone = '+57' + phone.replace(/\D/g, '');
-      }
-
-      await api.post('/customers', {
-        ...values,
-        whatsappNumber: phone
-      });
-
-      showNotification('Cliente creado exitosamente');
-      setShowModal(false);
-      reset({
-        name: '',
-        whatsappNumber: '+57',
-        notes: '',
-        nextPaymentDate: ''
-      });
-      fetchCustomers();
-      triggerRefresh();
-    } catch (error) {
-      showNotification(error.response?.data?.message || 'Error creando cliente', 'error');
     }
   };
 
@@ -144,9 +110,6 @@ const CreditsPage = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold text-gray-900">Clientes a Crédito</h1>
-        <button onClick={() => setShowModal(true)} className="btn btn-primary">
-          + Nuevo Cliente
-        </button>
       </div>
 
       {/* Stats */}
@@ -182,81 +145,6 @@ const CreditsPage = () => {
       </div>
 
       <Table columns={columns} data={customers} />
-
-      {/* Modal Nuevo Cliente */}
-      <Modal
-        isOpen={showModal}
-        onClose={() => {
-          setShowModal(false);
-          reset();
-        }}
-        title="Nuevo Cliente"
-      >
-        <form onSubmit={handleCreateCustomer} className="space-y-4">
-          <div>
-            <label className="label">Nombre Completo</label>
-            <input
-              type="text"
-              name="name"
-              value={values.name}
-              onChange={handleChange}
-              className="input"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="label">Número de WhatsApp</label>
-            <input
-              type="tel"
-              name="whatsappNumber"
-              value={values.whatsappNumber}
-              onChange={handleChange}
-              className="input"
-              placeholder="+57 300 123 4567"
-              required
-            />
-            <p className="text-xs text-gray-500 mt-1">
-              📱 Formato Colombia: +57 seguido del número (ej: +57 300 123 4567)
-            </p>
-          </div>
-
-          <div>
-            <label className="label">Fecha de Pago Programada (opcional)</label>
-            <input
-              type="datetime-local"
-              name="nextPaymentDate"
-              value={values.nextPaymentDate}
-              onChange={handleChange}
-              className="input"
-            />
-            <p className="text-xs text-gray-500 mt-1">
-              📅 Si programas una fecha, el sistema enviará recordatorio automático por WhatsApp
-            </p>
-          </div>
-
-          <div>
-            <label className="label">Notas (opcional)</label>
-            <textarea
-              name="notes"
-              value={values.notes}
-              onChange={handleChange}
-              className="input"
-              rows="3"
-              placeholder="Información adicional del cliente..."
-            />
-          </div>
-
-          <div className="flex justify-end space-x-3 mt-6">
-            <button type="button" onClick={() => setShowModal(false)} className="btn btn-secondary">
-              Cancelar
-            </button>
-            <button type="submit" className="btn btn-primary">
-              Crear Cliente
-            </button>
-          </div>
-        </form>
-      </Modal>
     </div>
   );
 };
