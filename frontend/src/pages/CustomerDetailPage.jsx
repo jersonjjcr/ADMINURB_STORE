@@ -40,8 +40,13 @@ const CustomerDetailPage = () => {
     e.preventDefault();
 
     const amount = parseFloat(values.amount);
-    if (amount <= 0 || amount > customer.balance) {
-      showNotification('Monto inválido', 'error');
+    if (amount <= 0) {
+      showNotification('El monto debe ser mayor a cero', 'error');
+      return;
+    }
+
+    if (amount > customer.balance) {
+      showNotification('El monto excede la deuda pendiente', 'error');
       return;
     }
 
@@ -51,13 +56,28 @@ const CustomerDetailPage = () => {
         note: values.note
       });
 
-      showNotification('Pago registrado exitosamente');
+      showNotification('Abono registrado exitosamente');
       setShowPaymentModal(false);
       reset();
       fetchCustomer();
       triggerRefresh();
     } catch (error) {
-      showNotification(error.response?.data?.message || 'Error registrando pago', 'error');
+      showNotification(error.response?.data?.message || 'Error registrando abono', 'error');
+    }
+  };
+
+  const handleDeleteCustomer = async () => {
+    if (!window.confirm(`¿Estás seguro de eliminar a ${customer.name}?\n\nEsta acción no se puede deshacer.`)) {
+      return;
+    }
+
+    try {
+      await api.delete(`/customers/${id}`);
+      showNotification('Cliente eliminado exitosamente');
+      triggerRefresh();
+      navigate('/credits');
+    } catch (error) {
+      showNotification(error.response?.data?.message || 'Error eliminando cliente', 'error');
     }
   };
 
@@ -102,12 +122,27 @@ const CustomerDetailPage = () => {
             ← Volver
           </button>
           <h1 className="text-3xl font-bold text-gray-900">{customer.name}</h1>
+          {customer.balance === 0 && (
+            <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-semibold">
+              ✅ Paz y Salvo
+            </span>
+          )}
         </div>
-        {customer.balance > 0 && (
-          <button onClick={() => setShowPaymentModal(true)} className="btn btn-primary">
-            💰 Registrar Pago
-          </button>
-        )}
+        <div className="flex space-x-3">
+          {customer.balance > 0 && (
+            <button onClick={() => setShowPaymentModal(true)} className="btn btn-primary">
+              💰 Registrar Abono
+            </button>
+          )}
+          {customer.balance === 0 && (
+            <button 
+              onClick={handleDeleteCustomer}
+              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+            >
+              🗑️ Eliminar Cliente
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Info del Cliente */}
@@ -259,14 +294,14 @@ const CustomerDetailPage = () => {
       >
         <form onSubmit={handleRegisterPayment} className="space-y-4">
           <div className="bg-gray-50 p-4 rounded-lg">
-            <p className="text-sm text-gray-600">Saldo pendiente:</p>
+            <p className="text-sm text-gray-600">Saldo pendiente actual:</p>
             <p className="text-2xl font-bold text-red-600">
               {formatCurrency(customer.balance)}
             </p>
           </div>
 
           <div>
-            <label className="label">Monto del Pago</label>
+            <label className="label">Monto del Abono</label>
             <input
               type="number"
               name="amount"
@@ -276,12 +311,27 @@ const CustomerDetailPage = () => {
               step="0.01"
               min="0.01"
               max={customer.balance}
+              placeholder="0.00"
               required
             />
             <p className="text-xs text-gray-500 mt-1">
               Máximo: {formatCurrency(customer.balance)}
             </p>
           </div>
+
+          {values.amount > 0 && parseFloat(values.amount) <= customer.balance && (
+            <div className="bg-blue-50 p-4 rounded-lg border-2 border-blue-200">
+              <p className="text-sm text-gray-600">Saldo restante después del abono:</p>
+              <p className="text-2xl font-bold text-blue-600">
+                {formatCurrency(customer.balance - parseFloat(values.amount))}
+              </p>
+              {customer.balance - parseFloat(values.amount) === 0 && (
+                <p className="text-green-600 text-sm font-semibold mt-2">
+                  ✅ El cliente quedará paz y salvo
+                </p>
+              )}
+            </div>
+          )}
 
           <div>
             <label className="label">Nota (opcional)</label>

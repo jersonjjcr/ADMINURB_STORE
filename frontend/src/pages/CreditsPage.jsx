@@ -8,30 +8,25 @@ import { useApp } from '../context/AppContext';
 import { useForm } from '../hooks/useCustomHooks';
 
 const CreditsPage = () => {
+  const [sales, setSales] = useState([]);
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showModal, setShowModal] = useState(false);
   const navigate = useNavigate();
   const { showNotification, triggerRefresh } = useApp();
 
-  const { values, handleChange, reset } = useForm({
-    name: '',
-    whatsappNumber: '+57',
-    notes: '',
-    nextPaymentDate: ''
-  });
-
   useEffect(() => {
-    fetchCustomers();
+    fetchCreditSales();
   }, []);
 
-  const fetchCustomers = async () => {
+  const fetchCreditSales = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/customers');
-      setCustomers(response.data.data);
+      const response = await api.get('/sales');
+      // Filtrar solo ventas a crédito
+      const creditSales = response.data.data.filter(sale => sale.paymentMethod === 'credit');
+      setSales(creditSales);
     } catch (error) {
-      showNotification('Error cargando clientes', 'error');
+      showNotification('Error cargando ventas a crédito', 'error');
     } finally {
       setLoading(false);
     }
