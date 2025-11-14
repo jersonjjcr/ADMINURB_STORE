@@ -5,6 +5,8 @@ import dotenv from 'dotenv';
 import { startCronJobs } from './cron/notificationCron.js';
 import { initializeDefaultUser } from './utils/initUser.js';
 
+// Urban Store API v1.0 - Updated
+
 // Rutas
 import authRoutes from './routes/authRoutes.js';
 import productRoutes from './routes/productRoutes.js';
