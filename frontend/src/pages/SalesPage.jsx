@@ -126,6 +126,25 @@ const SalesPage = () => {
     }
   };
 
+  const handleDeleteSale = async (saleId) => {
+    if (!window.confirm('¿Estás seguro de eliminar esta venta? Esta acción no se puede deshacer.')) {
+      return;
+    }
+
+    try {
+      await api.delete(`/sales/${saleId}`);
+      showNotification('Venta eliminada exitosamente');
+      fetchData();
+      triggerRefresh();
+    } catch (error) {
+      showNotification(error.response?.data?.message || 'Error eliminando venta', 'error');
+    }
+  };
+
+  const calculateTotalSales = () => {
+    return sales.reduce((acc, sale) => acc + sale.total, 0);
+  };
+
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('es-MX', {
       style: 'currency',
@@ -153,15 +172,33 @@ const SalesPage = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-gray-900">Ventas</h1>
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Ventas</h1>
+          <p className="text-gray-600 mt-1">Gestiona todas las transacciones</p>
+        </div>
         <button onClick={() => setShowModal(true)} className="btn btn-primary">
           + Nueva Venta
         </button>
       </div>
 
+      {/* Total de Ventas */}
+      <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl shadow-lg p-6 text-white">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-green-100 text-sm font-medium mb-1">Total de Ventas</p>
+            <h2 className="text-4xl font-bold">{formatCurrency(calculateTotalSales())}</h2>
+            <p className="text-green-100 text-sm mt-2">{sales.length} ventas registradas</p>
+          </div>
+          <div className="bg-white bg-opacity-20 rounded-2xl p-4">
+            <span className="text-5xl">💰</span>
+          </div>
+        </div>
+      </div>
+
       {/* Lista de Ventas */}
-      <div className="bg-white rounded-lg shadow-md overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
@@ -170,11 +207,12 @@ const SalesPage = () => {
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Cliente</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Items</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
+              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Acciones</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {sales.map((sale) => (
-              <tr key={sale._id}>
+              <tr key={sale._id} className="hover:bg-gray-50 transition">
                 <td className="px-6 py-4 whitespace-nowrap text-sm">{formatDate(sale.date)}</td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span
@@ -197,6 +235,15 @@ const SalesPage = () => {
                 <td className="px-6 py-4 whitespace-nowrap text-sm">{sale.items.length}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-bold">
                   {formatCurrency(sale.total)}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
+                  <button
+                    onClick={() => handleDeleteSale(sale._id)}
+                    className="text-red-600 hover:text-red-800 hover:bg-red-50 px-3 py-1 rounded-lg transition font-medium"
+                    title="Eliminar venta"
+                  >
+                    🗑️ Eliminar
+                  </button>
                 </td>
               </tr>
             ))}

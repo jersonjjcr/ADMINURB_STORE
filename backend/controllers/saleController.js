@@ -242,3 +242,70 @@ export const getSalesStats = async (req, res) => {
     });
   }
 };
+
+// Eliminar una venta
+export const deleteSale = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    const { id } = req.params;
+
+    const sale = await Sale.findById(id).session(session);
+
+    if (!sale) {
+      await session.abortTransaction();
+      return res.status(404).json({
+        success: false,
+        message: 'Venta no encontrada'
+      });
+    }
+
+    // Si la venta es a crédito, actualizar el balance del cliente
+    if (sale.isCredit && sale.customer) {
+      const customer = await Customer.findById(sale.customer).session(session);
+      
+      if (customer) {
+        // Restar el total de la venta del balance del cliente
+        customer.balance -= sale.total;
+        
+        // Remover la venta del historial de crédito
+        customer.creditHistory = customer.creditHistory.filter(
+          saleId => saleId.toString() !== id
+        );
+        
+        await customer.save({ session });
+      }
+    }
+
+    // Restaurar el stock de los productos
+    for (const item of sale.items) {
+      await Product.findByIdAndUpdate(
+        item.product,
+        { $inc: { stock: item.quantity } },
+        { session }
+      );
+    }
+
+    // Eliminar la venta
+    await Sale.findByIdAndDelete(id).session(session);
+
+    await session.commitTransaction();
+
+    res.json({
+      success: true,
+      message: 'Venta eliminada exitosamente'
+    });
+
+  } catch (error) {
+    await session.abortTransaction();
+    
+    res.status(500).json({
+      success: false,
+      message: 'Error eliminando venta',
+      error: error.message
+    });
+  } finally {
+    session.endSession();
+  }
+};
