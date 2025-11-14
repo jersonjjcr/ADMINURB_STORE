@@ -26,9 +26,25 @@ const DashboardPage = () => {
     try {
       setLoading(true);
       const response = await api.get('/dashboard');
-      setStats(response.data);
+      setStats({
+        totalSales: response.data.totalSales || 0,
+        totalProducts: response.data.totalProducts || 0,
+        lowStockProducts: response.data.lowStockProducts || 0,
+        totalDebt: response.data.totalDebt || 0,
+        customersWithDebt: response.data.customersWithDebt || [],
+        recentSales: response.data.recentSales || []
+      });
     } catch (error) {
       console.error('Error cargando dashboard:', error);
+      // Mantener valores por defecto en caso de error
+      setStats({
+        totalSales: 0,
+        totalProducts: 0,
+        lowStockProducts: 0,
+        totalDebt: 0,
+        customersWithDebt: [],
+        recentSales: []
+      });
     } finally {
       setLoading(false);
     }
@@ -114,14 +130,14 @@ const DashboardPage = () => {
               </button>
             </div>
 
-            {stats.customersWithDebt.length === 0 ? (
+            {!stats.customersWithDebt || stats.customersWithDebt.length === 0 ? (
               <div className="text-center py-12">
                 <p className="text-5xl mb-4">🎉</p>
                 <p className="text-gray-600 font-medium">¡No hay clientes con deudas pendientes!</p>
               </div>
             ) : (
               <div className="space-y-3">
-                {stats.customersWithDebt.slice(0, 5).map((customer) => (
+                {(stats.customersWithDebt || []).slice(0, 5).map((customer) => (
                   <div
                     key={customer._id}
                     onClick={() => navigate(`/customers/${customer._id}`)}
@@ -214,7 +230,7 @@ const DashboardPage = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {stats.recentSales.slice(0, 5).map((sale) => (
+                {(stats.recentSales || []).slice(0, 5).map((sale) => (
                   <tr key={sale._id} className="hover:bg-gray-50 transition">
                     <td className="py-3 px-4 text-sm text-gray-900">
                       {new Date(sale.date).toLocaleDateString('es-MX')}
