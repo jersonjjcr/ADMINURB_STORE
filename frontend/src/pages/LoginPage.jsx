@@ -6,8 +6,8 @@ const LoginPage = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
   const [formData, setFormData] = useState({
-    email: '',
-    password: ''
+    email: 'Admin',
+    password: 'Admin'
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -52,17 +52,17 @@ const LoginPage = () => {
 
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-              Correo Electrónico
+              Usuario
             </label>
             <input
-              type="email"
+              type="text"
               id="email"
               name="email"
               value={formData.email}
               onChange={handleChange}
               required
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-              placeholder="tu@email.com"
+              placeholder="Admin"
             />
           </div>
 
@@ -96,8 +96,13 @@ const LoginPage = () => {
           </button>
         </form>
 
-        <div className="mt-6 text-center text-sm text-gray-600">
-          <p>🔐 Acceso seguro con autenticación JWT</p>
+        <div className="mt-6 text-center">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <p className="text-sm font-medium text-blue-800 mb-2">📋 Credenciales de acceso:</p>
+            <p className="text-sm text-blue-700">Usuario: <span className="font-bold">Admin</span></p>
+            <p className="text-sm text-blue-700">Contraseña: <span className="font-bold">Admin</span></p>
+          </div>
+          <p className="mt-3 text-xs text-gray-500">🔐 Acceso seguro con JWT</p>
         </div>
       </div>
     </div>

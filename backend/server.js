@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { startCronJobs } from './cron/notificationCron.js';
+import { initializeDefaultUser } from './utils/initUser.js';
 
 // Rutas
 import authRoutes from './routes/authRoutes.js';
@@ -59,8 +60,11 @@ app.use((err, req, res, next) => {
 
 // Conexión a MongoDB
 mongoose.connect(process.env.MONGO_URI)
-  .then(() => {
+  .then(async () => {
     console.log('✅ Conectado a MongoDB');
+    
+    // Inicializar usuario por defecto
+    await initializeDefaultUser();
     
     // Iniciar servidor
     app.listen(PORT, () => {
